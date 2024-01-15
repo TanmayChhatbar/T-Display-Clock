@@ -1,6 +1,6 @@
 # TTGO T-Display Digital Clock
 
-![Clock Preview](link/to/preview/image.png)
+![Clock Preview](/stl/top.jpg)
 
 ## Overview
 
