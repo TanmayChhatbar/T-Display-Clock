@@ -59,6 +59,6 @@ Special thanks to all authors of the libraries used. Notably, Bodmer's library t
 ## Support
 If you have any questions or encounter issues, feel free to open an issue.
 
-I'm a student in Automotive engineering, and programming is not be strongest suite. Suggestions on how to improve readability and performance are welcome too!
+I'm a student in Automotive engineering, and programming is not my strongest suite. Suggestions on how to improve readability and performance are welcome too!
 
 Happy Coding!
