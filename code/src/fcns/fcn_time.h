@@ -1,11 +1,11 @@
 const char* ntpServer = "time1.google.com";
+const String timezone = "EST5EDT,M3.2.0,M11.1.0"; // get from https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
+
 int lasthour;
 int time_hr = 0;
 int time_min = 0;
 String stime_hr = "";
 String stime_min = "";
-const long  gmtOffset_sec = -18000;
-const int   daylightOffset_sec = 0;
 struct tm timeinfo;
 String sep = " ";
 
@@ -25,6 +25,15 @@ const char* password   = "E701D204";
 const int conlen = 2;
 int con = 0;
 unsigned long timer1;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void setTimezone(String timezone){
+  Serial.printf("  Setting Timezone to %s\n",timezone.c_str());
+  setenv("TZ",timezone.c_str(),1);  //  Now adjust the TZ.  Clock settings are adjusted to show the new local time
+  tzset();
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,10 +59,11 @@ y:
   Serial.print("WiFi Connected\nIP Address: ");
   Serial.println(WiFi.localIP());
   delay(1);
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  configTime(0, 0, ntpServer);
   while (!getLocalTime(&timeinfo)) {
     delay(100);
   }
+  setTimezone(timezone);
   lasthour = timeinfo.tm_hour;
 
   WiFi.disconnect(true);
@@ -100,6 +110,9 @@ void update_time(){
 
   // construct string
   String time = stime_hr + sep + stime_min;
+  
+  // wipe screen
+  spr.fillScreen(TXT_BACKGROUND);
   
   // pre-print
   spr.setTextDatum(TL_DATUM); // Set datum to bottom centre

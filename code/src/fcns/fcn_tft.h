@@ -22,7 +22,7 @@ int brightness = 32;
 
 void tft_init() {
   tft.init();
-  tft.setRotation(3);
+  tft.setRotation(1);
   tft.fillScreen(TXT_BACKGROUND);
   spr.createSprite(TFT_HEIGHT, TFT_WIDTH);
   spr.fillScreen(TXT_BACKGROUND);
