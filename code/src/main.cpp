@@ -8,30 +8,30 @@
 
 void task_time(void *parameters)
 {
-  for (;;)
-  {
-    update_time();
-    if (timeinfo.tm_hour >= lasthour + 4) // update every 4 hours
-      syncWiFi();
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
+	for (;;)
+	{
+		update_time();
+		if (timeinfo.tm_hour >= last_hour + 4) // update every 4 hours
+			syncWiFi();
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+	}
 }
 
 void setup()
 {
-  disp_init();
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_9x15_tr);
-  u8g2.drawStr(xOffset + 0, yOffset + 40, "WiFi");
-  u8g2.sendBuffer();
+	disp_init();
+	u8g2.clearBuffer();
+	u8g2.setFont(u8g2_font_10x20_tr);
+	u8g2.drawStr(xOffset + 0, yOffset + 2, "WiFi");
+	u8g2.sendBuffer();
 
-  syncWiFi();
-  delay(100);
+	syncWiFi();
+	delay(100);
 
-  xTaskCreate(task_time, "Update display", 4000, NULL, 1, NULL);
+	xTaskCreate(task_time, "Update display", 4000, NULL, 1, NULL);
 }
 
 void loop(void)
 {
-  delay(1000);
+	delay(1000);
 }
