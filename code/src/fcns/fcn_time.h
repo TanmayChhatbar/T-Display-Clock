@@ -1,4 +1,5 @@
-const char* ntpServer = "time1.google.com";
+#include <Arduino.h>
+char *ntpServer = "time1.google.com";
 const String timezone = "EST5EDT,M3.2.0,M11.1.0"; // get from https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
 
 int lasthour;
@@ -9,18 +10,12 @@ String stime_min = "";
 struct tm timeinfo;
 String sep = " ";
 
-const char * dayNames[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-const char * monthNames[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+const char *dayNames[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+const char *monthNames[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 char ctime_hr[2];
 char ctime_min[2];
 
-#if __has_include("credentials.h")
 #include "credentials.h"
-#else
-#error "Network credentials need setup. Comment line out once done"
-const char* ssid[] = {"SSID1", "SSID2"};
-const char* password   = "E701D204";
-#endif
 
 const int conlen = 2;
 int con = 0;
@@ -29,107 +24,81 @@ unsigned long timer1;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void setTimezone(String timezone){
-  Serial.printf("  Setting Timezone to %s\n",timezone.c_str());
-  setenv("TZ",timezone.c_str(),1);  //  Now adjust the TZ.  Clock settings are adjusted to show the new local time
+void setTimezone(String timezone)
+{
+  // Serial.printf("  Setting Timezone to %s\n",timezone.c_str());
+  setenv("TZ", timezone.c_str(), 1); //  Now adjust the TZ.  Clock settings are adjusted to show the new local time
   tzset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void syncWiFi() {
+void syncWiFi()
+{
 y:
-  Serial.printf("Connecting to %s", ssid[con]);
   WiFi.begin(ssid[con], password);
   con++;
   if (con >= conlen)
     con = 0;
   timer1 = millis();
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
-    Serial.print(".");
     if (millis() - timer1 > 10000)
     {
       goto y;
     }
   }
   int ip = WiFi.localIP()[3];
-  Serial.println("");
-  Serial.print("WiFi Connected\nIP Address: ");
-  Serial.println(WiFi.localIP());
   delay(1);
-  configTime(0, 0, ntpServer);
-  while (!getLocalTime(&timeinfo)) {
+  configTzTime(timezone.c_str(), ntpServer);
+  while (!getLocalTime(&timeinfo))
+  {
     delay(100);
   }
-  setTimezone(timezone);
   lasthour = timeinfo.tm_hour;
-
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-int serialPrintLocalTime() {          //returns 1 if error, else 0
-  if (!getLocalTime(&timeinfo)) {
-    Serial.println("Failed to obtain time");
-    Serial.println("Changing WiFi");
-    syncWiFi();
-    return 1;
-  }
-  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-  return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-String yearstr() {
+String yearstr()
+{
   String month = monthNames[timeinfo.tm_mon];
-  return month + " " + timeinfo.tm_mday + ", " + (1900+timeinfo.tm_year);
+  return month + " " + timeinfo.tm_mday + ", " + (1900 + timeinfo.tm_year);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void update_time(){
-  sprintf(ctime_hr, "%02d", (timeinfo.tm_hour%12==0)?12:timeinfo.tm_hour%12);
+void  update_time()
+{
+  getLocalTime(&timeinfo);
+  sprintf(ctime_hr, "%02d", (timeinfo.tm_hour % 12 == 0) ? 12 : timeinfo.tm_hour % 12);
   stime_hr = String(ctime_hr);
 
   sprintf(ctime_min, "%02d", timeinfo.tm_min);
   stime_min = String(ctime_min);
 
   // separator
-  if (timeinfo.tm_sec % 2 == 0)
+  if (int(timeinfo.tm_sec) % 2 == 0)
     sep = ":";
   else
     sep = " ";
 
   // construct string
   String time = stime_hr + sep + stime_min;
-  
+
   // wipe screen
-  spr.fillScreen(TXT_BACKGROUND);
-  
-  // pre-print
-  spr.setTextDatum(TL_DATUM); // Set datum to bottom centre
-  spr.fillRect(12, 4, 120, 20, TXT_BACKGROUND);
-  spr.setTextColor(TXT_POSITIVE, TXT_BACKGROUND);
-  
-  // time
-  spr.setTextFont(7);
-  spr.setTextSize(1);
-  spr.drawString(time, 10, 16);
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_9x15_tr);
+  u8g2.drawStr(xOffset + 0, yOffset + 30, time.c_str());
 
   // weekday
-  spr.setTextFont(1);
-  spr.setTextSize(2);
-  spr.drawString(dayNames[timeinfo.tm_wday], 10, 78);
-  spr.drawString(yearstr(), 8, 106);
-  spr.pushSprite(0,0);
+  u8g2.setFont(u8g2_font_4x6_tr);
+  u8g2.drawStr(xOffset + 0, yOffset + 40, dayNames[timeinfo.tm_wday]);
+  u8g2.drawStr(xOffset + 0, yOffset + 50, yearstr().c_str());
+  u8g2.sendBuffer();
 }
 
 //{

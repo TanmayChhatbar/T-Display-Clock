@@ -1,41 +1,37 @@
 // Standard libraries
 #include <Arduino.h>
-#include "T10_V20.h"
-#include <TFT_eSPI.h>
 #include <WiFi.h>
 #include "time.h"
 
 #include "fcn_tft.h"
 #include "fcn_time.h"
-#include "fcn_buttons.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void task_time(void * parameters){
-  for (;;){
+void task_time(void *parameters)
+{
+  for (;;)
+  {
     update_time();
-    serialPrintLocalTime();
-    if (timeinfo.tm_hour >= lasthour + 4)   //update every 4 hours
+    if (timeinfo.tm_hour >= lasthour + 4) // update every 4 hours
       syncWiFi();
-    vTaskDelay(1000/portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
 void setup()
 {
-  Serial.begin(115200);
-  button_init();
-  tft_init();     
+  disp_init();
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_9x15_tr);
+  u8g2.drawStr(xOffset + 0, yOffset + 40, "WiFi");
+  u8g2.sendBuffer();
+
   syncWiFi();
-  serialPrintLocalTime();
   delay(100);
 
   xTaskCreate(task_time, "Update display", 4000, NULL, 1, NULL);
 }
 
-void loop()
+void loop(void)
 {
-  button_loop();
-  delay(50);
+  delay(1000);
 }
